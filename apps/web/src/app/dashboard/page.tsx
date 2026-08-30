@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useLogout } from "@/features/auth/hooks/useLogout";
+import { BecomeVendorPrompt } from "@/features/vendor/components/become-vendor-prompt";
+import { VendorStatusCard } from "@/features/vendor/components/vendor-status-card";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-2xl space-y-4 p-4 sm:p-6 lg:p-8">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-32 w-full" />
         <Skeleton className="h-10 w-24" />
       </div>
     );
@@ -43,12 +46,21 @@ export default function DashboardPage() {
     );
   }
 
+  const vendor = data?.user.vendor;
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Welcome, {data?.user.name}</h1>
         <p className="text-muted-foreground">{data?.user.email}</p>
       </div>
+
+      {vendor ? (
+        <VendorStatusCard shopName={vendor.shop_name} onboardingComplete={vendor.stripe_onboarding_complete} />
+      ) : (
+        <BecomeVendorPrompt />
+      )}
+
       <Button variant="outline" className="w-fit" onClick={handleLogout} disabled={isLoggingOut}>
         {isLoggingOut ? "Logging out..." : "Logout"}
       </Button>
