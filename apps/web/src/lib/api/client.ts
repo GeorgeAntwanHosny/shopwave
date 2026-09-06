@@ -37,10 +37,23 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
     },
   });
 
-  const body: ApiEnvelope<T> = await res.json();
+  const raw = await res.text();
+  let body: ApiEnvelope<T> | null = null;
 
-  if (!res.ok || !body.success) {
-    throw new ApiError(res.status, body.errors, body.message || "Something went wrong.");
+  try {
+    body = raw ? JSON.parse(raw) : null;
+  } catch {
+    throw new ApiError(
+      res.status,
+      null,
+      res.ok
+        ? "The server returned an unexpected response. Please try again."
+        : `Request failed with status ${res.status}.`
+    );
+  }
+
+  if (!res.ok || !body?.success) {
+    throw new ApiError(res.status, body?.errors ?? null, body?.message || "Something went wrong.");
   }
 
   return body.data as T;

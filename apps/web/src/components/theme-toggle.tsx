@@ -6,27 +6,31 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Avoid a hydration mismatch: next-themes only knows the real theme client-side.
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return <Button variant="outline" size="icon" disabled className="shrink-0" />;
-  }
-
-  const isDark = theme === "dark";
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <Button
       variant="outline"
       size="icon"
       className="shrink-0"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label="Toggle theme"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {/* Show icon only after mounting to prevent SSR icon mismatch */}
+      {mounted ? (
+        resolvedTheme === "dark" ? (
+          <Sun className="h-4 w-4" />
+        ) : (
+          <Moon className="h-4 w-4" />
+        )
+      ) : (
+        <span className="h-4 w-4" />
+      )}
     </Button>
   );
 }

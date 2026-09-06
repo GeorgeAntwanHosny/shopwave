@@ -1,5 +1,7 @@
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { Package } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface VendorStatusCardProps {
   shopName: string;
@@ -18,6 +20,7 @@ export function VendorStatusCard({ shopName, onboardingComplete }: VendorStatusC
           {onboardingComplete ? "Stripe connected" : "Onboarding incomplete"}
         </Badge>
       </div>
+
       {!onboardingComplete && (
         <Link
           href="/vendor/onboarding/complete"
@@ -26,6 +29,18 @@ export function VendorStatusCard({ shopName, onboardingComplete }: VendorStatusC
           Finish connecting Stripe →
         </Link>
       )}
+
+      <div className="mt-5 border-t border-border pt-4">
+        <Button render={<Link href="/vendor/products" />} className="w-full sm:w-auto">
+          <Package className="mr-2 h-4 w-4" />
+          Manage products
+        </Button>
+        {!onboardingComplete && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            You can view your products now, but you&apos;ll need to finish Stripe onboarding before adding new ones.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

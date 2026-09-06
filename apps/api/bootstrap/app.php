@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias(['vendor' => \App\Http\Middleware\EnsureUserIsVendor::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (ValidationException $e, Request $request) {
@@ -32,11 +34,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 return ApiResponse::error('Unauthenticated.', null, 401);
             }
         });
-
+        $exceptions->render(function (AuthorizationException|AccessDeniedHttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return ApiResponse::error('This action is unauthorized.', null, 403);
+            }
+        });
         $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->is('api/*')) {
                 return ApiResponse::error($e->getMessage(), null, 500);
+
             }
+
         });
 
         $exceptions->report(function (\Throwable $e) {

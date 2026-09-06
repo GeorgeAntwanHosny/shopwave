@@ -44,13 +44,9 @@ export function OnboardingStatus() {
       </p>
 
       {complete ? (
-        <Button render={<Link href="/dashboard" />}>
-          Go to dashboard
-        </Button>
+        <Button render={<Link href="/dashboard" />}>Go to dashboard</Button>
       ) : data?.onboarding_url ? (
-        <Button render={<a href={data.onboarding_url} />}>
-          Continue Stripe setup
-        </Button>
+        <Button render={<a href={data.onboarding_url} />}>Continue Stripe setup</Button>
       ) : null}
     </div>
   );
