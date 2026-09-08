@@ -39,6 +39,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return ApiResponse::error('This action is unauthorized.', null, 403);
             }
         });
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return ApiResponse::error('The requested resource was not found.', null, 404);
+            }
+        });
         $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->is('api/*')) {
                 return ApiResponse::error($e->getMessage(), null, 500);

@@ -18,4 +18,4 @@ export function useProduct(slug: string) {
     queryFn: () => apiFetch<ProductDetail>(`/api/v1/products/${slug}`),
     enabled: !!slug,
   });
-}   
+}

@@ -1,6 +1,7 @@
 import { Providers } from "./providers";
-import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { CartSheet } from "@/features/cart/components/cart-sheet";
+import "./globals.css";
 
 export default function RootLayout({
   children,
@@ -9,11 +10,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* Add suppressHydrationWarning to the body tag */}
       <body suppressHydrationWarning>
         <Providers>
           <SiteHeader />
-          {children}</Providers>
+          {children}
+          <CartSheet />
+        </Providers>
       </body>
     </html>
   );

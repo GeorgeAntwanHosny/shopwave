@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CartButton } from "@/features/cart/components/cart-button";
 
 export function SiteHeader() {
   return (
@@ -9,7 +10,10 @@ export function SiteHeader() {
           <Link href="/" className="text-sm font-semibold text-foreground sm:text-base">ShopWave</Link>
           <Link href="/products" className="text-sm text-muted-foreground hover:text-foreground">Browse</Link>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <CartButton />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

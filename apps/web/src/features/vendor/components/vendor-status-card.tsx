@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package } from "lucide-react";
+import { Package, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -30,17 +30,21 @@ export function VendorStatusCard({ shopName, onboardingComplete }: VendorStatusC
         </Link>
       )}
 
-      <div className="mt-5 border-t border-border pt-4">
+      <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row">
         <Button render={<Link href="/vendor/products" />} className="w-full sm:w-auto">
           <Package className="mr-2 h-4 w-4" />
           Manage products
         </Button>
-        {!onboardingComplete && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            You can view your products now, but you&apos;ll need to finish Stripe onboarding before adding new ones.
-          </p>
-        )}
+        <Button render={<Link href="/vendor/coupons" />} variant="outline" className="w-full sm:w-auto">
+          <Tag className="mr-2 h-4 w-4" />
+          Manage coupons
+        </Button>
       </div>
+      {!onboardingComplete && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          You can view these now, but you&apos;ll need to finish Stripe onboarding before adding new products or coupons.
+        </p>
+      )}
     </div>
   );
 }

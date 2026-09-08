@@ -36,14 +36,15 @@ class ProductController extends Controller
         ], 'Products retrieved.');
     }
 
-    public function featured(): JsonResponse
+        public function featured(): JsonResponse
     {
         $products = Cache::remember('products:featured', now()->addMinutes(15), function () {
             return Product::where('is_active', true)
                 ->with(['vendor', 'images'])
                 ->latest()
                 ->take(8)
-                ->get();
+                ->get()
+                ->toArray();
         });
 
         return ApiResponse::success($products, 'Featured products retrieved.');
@@ -56,7 +57,8 @@ class ProductController extends Controller
         }
 
         $data = Cache::remember("products:detail:{$product->slug}", now()->addMinutes(30), function () use ($product) {
-            return $product->load(['vendor', 'category', 'images']);
+            // Add ->toArray() here to prevent PHP incomplete class issues
+            return $product->load(['vendor', 'category', 'images'])->toArray();
         });
 
         return ApiResponse::success($data, 'Product retrieved.');

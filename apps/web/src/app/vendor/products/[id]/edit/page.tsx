@@ -69,7 +69,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         }}
       />
 
-      <ProductImageManager productId={id} images={product.images} />
+      {/* Defensive: same as elsewhere, don't assume images is always present */}
+      <ProductImageManager productId={id} images={product.images ?? []} />
     </div>
   );
 }

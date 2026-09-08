@@ -9,6 +9,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VendorProductController;
 use App\Http\Controllers\VendorProductImageController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\VendorCouponController;
 
 Route::get('/v1/ping', PingController::class);
 
@@ -44,4 +46,23 @@ Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/products')->gro
     Route::post('/{product}/images', [VendorProductImageController::class, 'store']);
     Route::delete('/{product}/images/{image}', [VendorProductImageController::class, 'destroy']);
     Route::put('/{product}/images/reorder', [VendorProductImageController::class, 'reorder']);
+});
+
+// Cart — open to guests and authenticated users alike; identity is
+// resolved per-request via optional Sanctum auth + an X-Cart-Token header,
+// deliberately NOT behind auth:sanctum (which would 401 guests).
+Route::prefix('v1/cart')->group(function () {
+    Route::get('/', [CartController::class, 'show']);
+    Route::post('/items', [CartController::class, 'storeItem']);
+    Route::put('/items/{product}', [CartController::class, 'updateItem']);
+    Route::delete('/items/{product}', [CartController::class, 'destroyItem']);
+    Route::post('/coupon', [CartController::class, 'applyCoupon']);
+    Route::delete('/coupon', [CartController::class, 'destroyCoupon']);
+});
+
+Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/coupons')->group(function () {
+    Route::get('/', [VendorCouponController::class, 'index']);
+    Route::post('/', [VendorCouponController::class, 'store']);
+    Route::put('/{coupon}', [VendorCouponController::class, 'update']);
+    Route::delete('/{coupon}', [VendorCouponController::class, 'destroy']);
 });

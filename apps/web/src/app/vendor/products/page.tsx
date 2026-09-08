@@ -139,43 +139,51 @@ export default function VendorProductsPage() {
       ) : (
         <>
           <div className="space-y-3">
-            {data?.products.map((product) => (
-              <div key={product.id} className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div
-                    className="h-14 w-14 shrink-0 rounded bg-muted bg-cover bg-center"
-                    style={product.images[0] ? { backgroundImage: `url(${product.images[0].url})` } : undefined}
-                  />
-                  <div className="overflow-hidden">
-                    <p className="truncate font-medium text-card-foreground">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">${product.price} · {product.stock_quantity} in stock</p>
+            {data?.products.map((product) => {
+              // Defensive: guard against images being unexpectedly absent,
+              // same reasoning as the public product card/detail page.
+              const thumbnail = product.images?.[0]?.url;
+
+              return (
+                <div key={product.id} className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div
+                      className="h-14 w-14 shrink-0 rounded bg-muted bg-cover bg-center"
+                      style={thumbnail ? { backgroundImage: `url(${thumbnail})` } : undefined}
+                    />
+                    <div className="overflow-hidden">
+                      <p className="truncate font-medium text-card-foreground">{product.name}</p>
+                      <p className="text-sm text-muted-foreground">${product.price} · {product.stock_quantity} in stock</p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Badge variant={product.is_active ? "default" : "secondary"}>
+                      {product.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                    <Button render={<Link href={`/vendor/products/${product.id}/edit`} />} variant="outline" size="sm">
+                      Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger render={<Button variant="outline" size="sm" />}>
+                        Delete
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this product?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes {product.name} and all of its images. This can&apos;t be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction disabled={isDeleting} onClick={() => handleDelete(product.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Badge variant={product.is_active ? "default" : "secondary"}>
-                    {product.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                  <Button render={<Link href={`/vendor/products/${product.id}/edit`} />} variant="outline" size="sm">
-                    Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild><Button variant="outline" size="sm">Delete</Button></AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this product?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This removes {product.name} and all of its images. This can&apos;t be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction disabled={isDeleting} onClick={() => handleDelete(product.id)}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {data && (
             <PaginationControls
