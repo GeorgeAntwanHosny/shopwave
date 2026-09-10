@@ -39,4 +39,8 @@ class Vendor extends Model
     {
         return $this->hasMany(Coupon::class);
     }
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }

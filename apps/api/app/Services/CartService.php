@@ -172,6 +172,7 @@ class CartService
             if ($appliedCoupon && $appliedCoupon->vendor_id === $group['vendor_id']) {
                 $discount = $this->calculateDiscount($appliedCoupon, $group['subtotal']);
                 $group['coupon'] = [
+                    'id' => $appliedCoupon->id,
                     'code' => $appliedCoupon->code,
                     'type' => $appliedCoupon->type,
                     'value' => (string) $appliedCoupon->value,
@@ -292,5 +293,15 @@ class CartService
     protected function refreshTtl(string $cartKey): void
     {
         Redis::expire($cartKey, self::TTL_SECONDS);
+    }
+
+    /**
+     * Empties a cart entirely — used after a successful checkout, once its
+     * contents have been converted into real Order rows.
+     */
+    public function clear(string $cartKey): void
+    {
+        Redis::del($cartKey);
+        Redis::del("{$cartKey}:coupon");
     }
 }

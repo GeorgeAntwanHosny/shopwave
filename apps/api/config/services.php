@@ -38,5 +38,8 @@ return [
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'payment_webhook_secret' => env('STRIPE_PAYMENT_WEBHOOK_SECRET'),
     ],
+
+    'platform_commission_percent' => env('PLATFORM_COMMISSION_PERCENT', 10),
 ];

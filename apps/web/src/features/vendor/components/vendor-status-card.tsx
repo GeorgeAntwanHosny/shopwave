@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package, Tag } from "lucide-react";
+import { Package, Tag, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -30,7 +30,7 @@ export function VendorStatusCard({ shopName, onboardingComplete }: VendorStatusC
         </Link>
       )}
 
-      <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row">
+      <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:flex-wrap">
         <Button render={<Link href="/vendor/products" />} className="w-full sm:w-auto">
           <Package className="mr-2 h-4 w-4" />
           Manage products
@@ -38,6 +38,10 @@ export function VendorStatusCard({ shopName, onboardingComplete }: VendorStatusC
         <Button render={<Link href="/vendor/coupons" />} variant="outline" className="w-full sm:w-auto">
           <Tag className="mr-2 h-4 w-4" />
           Manage coupons
+        </Button>
+        <Button render={<Link href="/vendor/orders" />} variant="outline" className="w-full sm:w-auto">
+          <ClipboardList className="mr-2 h-4 w-4" />
+          Received orders
         </Button>
       </div>
       {!onboardingComplete && (

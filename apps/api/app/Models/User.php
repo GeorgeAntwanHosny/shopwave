@@ -36,4 +36,8 @@ class User extends Authenticatable
         return $this->hasOne(Vendor::class);
     }
 
+    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }

@@ -11,6 +11,10 @@ use App\Http\Controllers\VendorProductController;
 use App\Http\Controllers\VendorProductImageController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\VendorCouponController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StripePaymentWebhookController;
+use App\Http\Controllers\VendorOrderController;
 
 Route::get('/v1/ping', PingController::class);
 
@@ -65,4 +69,18 @@ Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/coupons')->grou
     Route::post('/', [VendorCouponController::class, 'store']);
     Route::put('/{coupon}', [VendorCouponController::class, 'update']);
     Route::delete('/{coupon}', [VendorCouponController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/v1/checkout', [CheckoutController::class, 'store']);
+    Route::get('/v1/checkout/{paymentIntentId}/status', [CheckoutController::class, 'status']);
+    Route::get('/v1/orders', [OrderController::class, 'index']);
+    Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
+});
+
+Route::post('/v1/webhooks/stripe-payments', [StripePaymentWebhookController::class, 'handle']);
+
+Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/orders')->group(function () {
+    Route::get('/', [VendorOrderController::class, 'index']);
+    Route::get('/{order}', [VendorOrderController::class, 'show']);
 });

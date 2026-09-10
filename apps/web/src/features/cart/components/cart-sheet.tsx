@@ -170,8 +170,8 @@ export function CartSheet() {
               <span>Total</span>
               <span>${data?.grand_total}</span>
             </div>
-            <Button className="w-full" disabled title="Checkout arrives in Phase 5">
-              Checkout (coming soon)
+            <Button render={<Link href="/checkout" />} className="w-full" onClick={closeCart}>
+              Checkout
             </Button>
             <Button render={<Link href="/products" />} variant="outline" className="w-full" onClick={closeCart}>
               Continue shopping
