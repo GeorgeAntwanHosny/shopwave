@@ -33,5 +33,6 @@
         <env name="STRIPE_WEBHOOK_SECRET" value="whsec_test_dummy_secret"/>
         <env name="STRIPE_PAYMENT_WEBHOOK_SECRET" value="whsec_test_dummy_payment_secret"/>
         <env name="FRONTEND_URL" value="http://localhost:3000"/>
+        <env name="LOW_STOCK_THRESHOLD" value="5"/>
     </php>
 </phpunit>

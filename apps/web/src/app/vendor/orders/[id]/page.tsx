@@ -4,6 +4,7 @@ import { use } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useVendorOrder } from "@/features/vendor/orders/hooks/useVendorOrder";
+import { FulfillmentForm } from "@/features/vendor/orders/components/fulfillment-form";
 
 export default function VendorOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -31,12 +32,18 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Order #{order.id}</h1>
         <p className="text-muted-foreground">{order.user.name} · {order.user.email}</p>
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           <Badge variant={order.status === "paid" ? "default" : "secondary"}>{order.status}</Badge>
+          <Badge variant="outline">{order.fulfillment_status}</Badge>
           <Badge variant={order.transferred_at ? "default" : "secondary"}>
             {order.transferred_at ? "Paid out" : "Payout pending"}
           </Badge>
         </div>
+        {order.tracking_number && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {order.carrier} · {order.tracking_number}
+          </p>
+        )}
       </div>
 
       <div className="rounded-lg border border-border bg-card p-4">
@@ -69,6 +76,13 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
           </div>
         </div>
       </div>
+
+      <FulfillmentForm
+        orderId={id}
+        currentStatus={order.fulfillment_status}
+        currentTrackingNumber={order.tracking_number}
+        currentCarrier={order.carrier}
+      />
     </div>
   );
 }

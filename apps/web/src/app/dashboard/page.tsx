@@ -8,6 +8,7 @@ import { useMe } from "@/features/auth/hooks/useMe";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { BecomeVendorPrompt } from "@/features/vendor/components/become-vendor-prompt";
 import { VendorStatusCard } from "@/features/vendor/components/vendor-status-card";
+import { DashboardPreview } from "@/features/vendor/dashboard/components/dashboard-preview";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -56,7 +57,10 @@ export default function DashboardPage() {
       </div>
 
       {vendor ? (
-        <VendorStatusCard shopName={vendor.shop_name} onboardingComplete={vendor.stripe_onboarding_complete} />
+        <>
+          <DashboardPreview />
+          <VendorStatusCard shopName={vendor.shop_name} onboardingComplete={vendor.stripe_onboarding_complete} />
+        </>
       ) : (
         <BecomeVendorPrompt />
       )}

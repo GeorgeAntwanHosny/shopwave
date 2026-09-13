@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Order\UpdateOrderFulfillmentAction;
+use App\Http\Requests\Order\UpdateOrderFulfillmentRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
@@ -47,5 +49,12 @@ class VendorOrderController extends Controller
         Gate::authorize('viewAsVendor', $order);
 
         return ApiResponse::success($order->load(['items', 'user']), 'Order retrieved.');
+    }
+
+    public function update(UpdateOrderFulfillmentRequest $request, Order $order, UpdateOrderFulfillmentAction $action): JsonResponse
+    {
+        $updated = $action->execute($order, $request->validated());
+
+        return ApiResponse::success($updated, 'Order updated.');
     }
 }

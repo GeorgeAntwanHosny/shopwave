@@ -24,9 +24,9 @@ export function useRegister() {
     mutationFn: (payload: RegisterPayload) =>
       apiFetch<AuthResponse>("/api/v1/auth/register", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: (data) => {
+      queryClient.clear();
       setAuth(data.user, data.token);
       clearGuestToken();
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
 }

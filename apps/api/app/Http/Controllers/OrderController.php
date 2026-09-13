@@ -46,6 +46,6 @@ class OrderController extends Controller
     {
         Gate::authorize('view', $order);
 
-        return ApiResponse::success($order->load(['items', 'vendor']), 'Order retrieved.');
+        return ApiResponse::success($order->load(['items.review.reply', 'vendor']), 'Order retrieved.');
     }
 }

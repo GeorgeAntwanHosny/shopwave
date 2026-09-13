@@ -22,12 +22,9 @@ export function useLogin() {
     mutationFn: (payload: LoginPayload) =>
       apiFetch<AuthResponse>("/api/v1/auth/login", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: (data) => {
+      queryClient.clear();
       setAuth(data.user, data.token);
-      // The guest cart (if any) was just merged into this user's cart
-      // server-side — drop the guest token so future cart requests are
-      // identified by the authenticated user instead.
       clearGuestToken();
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
 }

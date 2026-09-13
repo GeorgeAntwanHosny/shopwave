@@ -16,4 +16,9 @@ class OrderPolicy
     {
         return $user->vendor && $user->vendor->id === $order->vendor_id;
     }
+
+    public function updateAsVendor(User $user, Order $order): bool
+    {
+        return $this->viewAsVendor($user, $order);
+    }
 }

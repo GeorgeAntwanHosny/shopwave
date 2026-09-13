@@ -13,8 +13,11 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\VendorCouponController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewReplyController;
 use App\Http\Controllers\StripePaymentWebhookController;
 use App\Http\Controllers\VendorOrderController;
+use App\Http\Controllers\VendorDashboardController;
 
 Route::get('/v1/ping', PingController::class);
 
@@ -28,29 +31,55 @@ Route::prefix('v1/auth')->group(function () {
     });
 });
 
+Route::middleware(['auth:sanctum', 'vendor'])->group(function () {
+    Route::prefix('v1/vendor/products')->group(function () {
+        Route::get('/', [VendorProductController::class, 'index']);
+        Route::post('/', [VendorProductController::class, 'store']);
+        Route::get('/{product}', [VendorProductController::class, 'show']);
+        Route::put('/{product}', [VendorProductController::class, 'update']);
+        Route::delete('/{product}', [VendorProductController::class, 'destroy']);
+        Route::post('/{product}/images', [VendorProductImageController::class, 'store']);
+        Route::delete('/{product}/images/{image}', [VendorProductImageController::class, 'destroy']);
+        Route::put('/{product}/images/reorder', [VendorProductImageController::class, 'reorder']);
+    });
+
+    Route::prefix('v1/vendor/coupons')->group(function () {
+        Route::get('/', [VendorCouponController::class, 'index']);
+        Route::post('/', [VendorCouponController::class, 'store']);
+        Route::put('/{coupon}', [VendorCouponController::class, 'update']);
+        Route::delete('/{coupon}', [VendorCouponController::class, 'destroy']);
+    });
+
+    Route::prefix('v1/vendor/orders')->group(function () {
+        Route::get('/', [VendorOrderController::class, 'index']);
+        Route::get('/{order}', [VendorOrderController::class, 'show']);
+        Route::put('/{order}', [VendorOrderController::class, 'update']);
+    });
+
+    Route::prefix('v1/vendor/dashboard')->group(function () {
+        Route::get('/stats', [VendorDashboardController::class, 'stats']);
+        Route::get('/revenue-chart', [VendorDashboardController::class, 'revenueChart']);
+        Route::get('/low-stock', [VendorDashboardController::class, 'lowStock']);
+        Route::get('/analytics', [VendorDashboardController::class, 'analytics']);
+    });
+
+    Route::post('/v1/reviews/{review}/reply', [ReviewReplyController::class, 'store']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/v1/vendor/onboard', [VendorController::class, 'onboard']);
     Route::get('/v1/vendor/status', [VendorController::class, 'status']);
+    Route::post('/v1/order-items/{orderItem}/reviews', [ReviewController::class, 'store']);
+    Route::put('/v1/reviews/{review}', [ReviewController::class, 'update']);
 });
 
 Route::post('/v1/webhooks/stripe', [StripeWebhookController::class, 'handle']);
-
 
 Route::get('/v1/categories', [CategoryController::class, 'index']);
 Route::get('/v1/products/featured', [ProductController::class, 'featured']); // must precede {product:slug}
 Route::get('/v1/products/{product:slug}', [ProductController::class, 'show']);
 Route::get('/v1/products', [ProductController::class, 'index']);
-
-Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/products')->group(function () {
-    Route::get('/', [VendorProductController::class, 'index']);
-    Route::post('/', [VendorProductController::class, 'store']);
-    Route::get('/{product}', [VendorProductController::class, 'show']);
-    Route::put('/{product}', [VendorProductController::class, 'update']);
-    Route::delete('/{product}', [VendorProductController::class, 'destroy']);
-    Route::post('/{product}/images', [VendorProductImageController::class, 'store']);
-    Route::delete('/{product}/images/{image}', [VendorProductImageController::class, 'destroy']);
-    Route::put('/{product}/images/reorder', [VendorProductImageController::class, 'reorder']);
-});
+Route::get('/v1/products/{product:slug}/reviews', [ReviewController::class, 'index']);
 
 // Cart — open to guests and authenticated users alike; identity is
 // resolved per-request via optional Sanctum auth + an X-Cart-Token header,
@@ -64,13 +93,6 @@ Route::prefix('v1/cart')->group(function () {
     Route::delete('/coupon', [CartController::class, 'destroyCoupon']);
 });
 
-Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/coupons')->group(function () {
-    Route::get('/', [VendorCouponController::class, 'index']);
-    Route::post('/', [VendorCouponController::class, 'store']);
-    Route::put('/{coupon}', [VendorCouponController::class, 'update']);
-    Route::delete('/{coupon}', [VendorCouponController::class, 'destroy']);
-});
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/v1/checkout', [CheckoutController::class, 'store']);
     Route::get('/v1/checkout/{paymentIntentId}/status', [CheckoutController::class, 'status']);
@@ -80,7 +102,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/v1/webhooks/stripe-payments', [StripePaymentWebhookController::class, 'handle']);
 
-Route::middleware(['auth:sanctum', 'vendor'])->prefix('v1/vendor/orders')->group(function () {
-    Route::get('/', [VendorOrderController::class, 'index']);
-    Route::get('/{order}', [VendorOrderController::class, 'show']);
-});

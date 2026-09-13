@@ -10,6 +10,9 @@ interface VendorOrderDetail {
   vendor_payout_amount: string;
   total: string;
   status: string;
+  fulfillment_status: "processing" | "shipped" | "delivered";
+  tracking_number: string | null;
+  carrier: string | null;
   transferred_at: string | null;
   created_at: string;
   items: { id: number; product_name: string; price: string; quantity: number; subtotal: string }[];
