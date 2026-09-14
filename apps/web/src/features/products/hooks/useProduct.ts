@@ -8,6 +8,8 @@ interface ProductDetail {
   description: string | null;
   price: string;
   stock_quantity: number;
+  average_rating: string;
+  rating_count: number;
   images: { id: number; url: string }[];
   vendor: { id: number; shop_name: string };
 }

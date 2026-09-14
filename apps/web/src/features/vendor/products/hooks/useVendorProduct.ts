@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/api/client";
 export interface VendorProductDetail {
   id: number;
   name: string;
+  slug: string;
   description: string | null;
   price: string;
   stock_quantity: number;

@@ -3,8 +3,9 @@
 import { use } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { ProductForm } from "@/features/vendor/products/components/product-form";
 import { ProductImageManager } from "@/features/vendor/products/components/product-image-manager";
 import { useVendorProduct } from "@/features/vendor/products/hooks/useVendorProduct";
@@ -48,7 +49,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="mx-auto max-w-xl space-y-8 p-4 sm:p-6 lg:p-8">
       {backLink}
-      <h1 className="text-2xl font-semibold text-foreground">Edit product</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">Edit product</h1>
+        <Button render={<Link href={`/products/${product.slug}`} target="_blank" />} variant="outline" size="sm">
+          View & reply to reviews
+          <ExternalLink className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
 
       <ProductForm
         isPending={isPending}
@@ -69,7 +76,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         }}
       />
 
-      {/* Defensive: same as elsewhere, don't assume images is always present */}
       <ProductImageManager productId={id} images={product.images ?? []} />
     </div>
   );

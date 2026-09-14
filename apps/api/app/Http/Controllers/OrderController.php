@@ -18,7 +18,7 @@ class OrderController extends Controller
             'date_to' => ['nullable', 'date'],
         ]);
 
-        $query = $request->user()->orders()->with(['items', 'vendor']);
+        $query = $request->user()->orders()->with(['items.review', 'vendor']);
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);

@@ -48,7 +48,7 @@ class VendorOrderController extends Controller
     {
         Gate::authorize('viewAsVendor', $order);
 
-        return ApiResponse::success($order->load(['items', 'user']), 'Order retrieved.');
+        return ApiResponse::success($order->load(['items.review.reply', 'user']), 'Order retrieved.');
     }
 
     public function update(UpdateOrderFulfillmentRequest $request, Order $order, UpdateOrderFulfillmentAction $action): JsonResponse

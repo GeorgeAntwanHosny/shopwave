@@ -8,8 +8,22 @@ interface OrderDetail {
   discount_amount: string;
   total: string;
   status: string;
+  fulfillment_status: string;
   created_at: string;
-  items: { id: number; product_name: string; price: string; quantity: number; subtotal: string }[];
+  items: {
+    id: number;
+    product_name: string;
+    price: string;
+    quantity: number;
+    subtotal: string;
+    review: {
+      id: number;
+      rating: number;
+      comment: string | null;
+      created_at: string;
+      reply: { reply: string } | null;
+    } | null;
+  }[];
 }
 
 export function useOrder(id: string) {

@@ -15,7 +15,19 @@ interface VendorOrderDetail {
   carrier: string | null;
   transferred_at: string | null;
   created_at: string;
-  items: { id: number; product_name: string; price: string; quantity: number; subtotal: string }[];
+  items: {
+    id: number;
+    product_name: string;
+    price: string;
+    quantity: number;
+    subtotal: string;
+    review: {
+      id: number;
+      rating: number;
+      comment: string | null;
+      reply: { reply: string } | null;
+    } | null;
+  }[];
 }
 
 export function useVendorOrder(id: string) {

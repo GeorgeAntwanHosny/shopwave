@@ -3,6 +3,8 @@
 namespace Tests\Feature\Checkout;
 
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Review;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -47,5 +49,21 @@ class OrderIndexTest extends TestCase
 
         $ids = collect($response->json('data.orders'))->pluck('id');
         $this->assertEquals([$recent->id], $ids->all());
+    }
+
+    public function test_order_items_include_review_status(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $user->id, 'fulfillment_status' => 'delivered']);
+        $reviewedItem = OrderItem::factory()->create(['order_id' => $order->id]);
+        $unreviewedItem = OrderItem::factory()->create(['order_id' => $order->id]);
+        Review::factory()->create(['order_item_id' => $reviewedItem->id, 'product_id' => $reviewedItem->product_id]);
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/v1/orders');
+
+        $items = collect($response->json('data.orders.0.items'));
+        $this->assertNotNull($items->firstWhere('id', $reviewedItem->id)['review']);
+        $this->assertNull($items->firstWhere('id', $unreviewedItem->id)['review']);
     }
 }

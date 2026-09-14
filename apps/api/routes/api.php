@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/vendor/status', [VendorController::class, 'status']);
     Route::post('/v1/order-items/{orderItem}/reviews', [ReviewController::class, 'store']);
     Route::put('/v1/reviews/{review}', [ReviewController::class, 'update']);
+    Route::get('/v1/products/{product:slug}/review-eligibility', [ReviewController::class, 'reviewEligibility']);
 });
 
 Route::post('/v1/webhooks/stripe', [StripeWebhookController::class, 'handle']);

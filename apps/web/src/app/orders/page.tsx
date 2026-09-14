@@ -92,25 +92,38 @@ export default function OrdersPage() {
       ) : (
         <>
           <div className="space-y-3">
-            {data?.orders.map((order) => (
-              <Link
-                key={order.id}
-                href={`/orders/${order.id}`}
-                className="block rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-card-foreground">{order.vendor.shop_name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {order.items.length} item{order.items.length !== 1 ? "s" : ""} ·{" "}
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </p>
+            {data?.orders.map((order) => {
+              const pendingReviewCount = order.fulfillment_status === "delivered"
+                ? order.items.filter((item) => !item.review).length
+                : 0;
+
+              return (
+                <Link
+                  key={order.id}
+                  href={`/orders/${order.id}`}
+                  className="block rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-card-foreground">{order.vendor.shop_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.items.length} item{order.items.length !== 1 ? "s" : ""} ·{" "}
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge variant={order.status === "paid" ? "default" : "secondary"}>{order.status}</Badge>
                   </div>
-                  <Badge variant={order.status === "paid" ? "default" : "secondary"}>{order.status}</Badge>
-                </div>
-                <p className="mt-2 font-semibold text-card-foreground">${order.total}</p>
-              </Link>
-            ))}
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="font-semibold text-card-foreground">${order.total}</p>
+                    {pendingReviewCount > 0 && (
+                      <span className="text-sm font-medium text-primary">
+                        {pendingReviewCount} item{pendingReviewCount !== 1 ? "s" : ""} awaiting review →
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
           {data && (
             <PaginationControls

@@ -8,13 +8,21 @@ export interface OrderFilters {
   page?: number;
 }
 
+export interface OrderItemSummary {
+  id: number;
+  product_name: string;
+  quantity: number;
+  review: { id: number } | null;
+}
+
 export interface OrderSummary {
   id: number;
   vendor: { shop_name: string };
   total: string;
   status: string;
+  fulfillment_status: string;
   created_at: string;
-  items: { product_name: string; quantity: number }[];
+  items: OrderItemSummary[];
 }
 
 interface OrdersResponse {

@@ -3,8 +3,10 @@
 import { use } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/star-rating";
 import { useVendorOrder } from "@/features/vendor/orders/hooks/useVendorOrder";
 import { FulfillmentForm } from "@/features/vendor/orders/components/fulfillment-form";
+import { ReplyForm } from "@/features/reviews/components/reply-form";
 
 export default function VendorOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -47,11 +49,28 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="rounded-lg border border-border bg-card p-4">
-        <div className="space-y-2">
+        <div className="space-y-3">
           {order.items.map((item) => (
-            <div key={item.id} className="flex justify-between text-sm">
-              <span>{item.quantity}× {item.product_name}</span>
-              <span>${item.subtotal}</span>
+            <div key={item.id} className="space-y-2 border-b border-border pb-3 last:border-0 last:pb-0">
+              <div className="flex justify-between text-sm">
+                <span>{item.quantity}× {item.product_name}</span>
+                <span>${item.subtotal}</span>
+              </div>
+              {item.review && (
+                <div className="rounded-md bg-muted/50 p-3">
+                  <p className="text-xs font-medium text-foreground">Customer review</p>
+                  <div className="mt-1"><StarRating value={item.review.rating} size="sm" /></div>
+                  {item.review.comment && (
+                    <p className="mt-1 text-sm text-muted-foreground">{item.review.comment}</p>
+                  )}
+                  <ReplyForm
+                    reviewId={item.review.id}
+                    existingReply={item.review.reply?.reply ?? null}
+                    canReply
+                    label="Your response"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
