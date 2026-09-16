@@ -1,19 +1,19 @@
 <?php
 
-namespace Tests\Feature\Broadcasting;
+namespace Tests\Feature\Notifications;
 
 use App\Actions\Checkout\ProcessSuccessfulCheckoutAction;
-use App\Events\LowStockAlert;
-use App\Events\NewOrderReceived;
 use App\Models\CheckoutSession;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
-use Illuminate\Support\Facades\Event;
+use App\Notifications\LowStockAlertNotification;
+use App\Notifications\NewOrderReceivedNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
-class OrderBroadcastsTest extends TestCase
+class OrderNotificationsTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -46,9 +46,9 @@ class OrderBroadcastsTest extends TestCase
         ];
     }
 
-    public function test_a_new_order_dispatches_new_order_received(): void
+    public function test_a_new_order_notifies_the_vendor(): void
     {
-        Event::fake([NewOrderReceived::class, LowStockAlert::class]);
+        Notification::fake();
 
         $user = User::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -62,17 +62,15 @@ class OrderBroadcastsTest extends TestCase
 
         app(ProcessSuccessfulCheckoutAction::class)->execute($checkoutSession);
 
-        Event::assertDispatched(NewOrderReceived::class, fn ($e) => $e->order->vendor_id === $vendor->id);
+        Notification::assertSentTo($vendor, NewOrderReceivedNotification::class);
     }
 
-    public function test_stock_crossing_the_low_stock_threshold_dispatches_low_stock_alert(): void
+    public function test_stock_crossing_the_low_stock_threshold_notifies_the_vendor(): void
     {
-        Event::fake([NewOrderReceived::class, LowStockAlert::class]);
+        Notification::fake();
 
         $user = User::factory()->create();
         $vendor = Vendor::factory()->create();
-        // Test env's LOW_STOCK_THRESHOLD is 5 — starts at 6, buying 2 drops
-        // it to 4, crossing the threshold.
         $product = Product::factory()->create(['vendor_id' => $vendor->id, 'stock_quantity' => 6]);
 
         $checkoutSession = CheckoutSession::factory()->create([
@@ -83,12 +81,12 @@ class OrderBroadcastsTest extends TestCase
 
         app(ProcessSuccessfulCheckoutAction::class)->execute($checkoutSession);
 
-        Event::assertDispatched(LowStockAlert::class, fn ($e) => $e->product->id === $product->id);
+        Notification::assertSentTo($vendor, LowStockAlertNotification::class);
     }
 
-    public function test_stock_already_below_threshold_does_not_redispatch_low_stock_alert(): void
+    public function test_stock_already_below_threshold_does_not_renotify(): void
     {
-        Event::fake([NewOrderReceived::class, LowStockAlert::class]);
+        Notification::fake();
 
         $user = User::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -102,6 +100,6 @@ class OrderBroadcastsTest extends TestCase
 
         app(ProcessSuccessfulCheckoutAction::class)->execute($checkoutSession);
 
-        Event::assertNotDispatched(LowStockAlert::class);
+        Notification::assertNotSentTo($vendor, LowStockAlertNotification::class);
     }
 }

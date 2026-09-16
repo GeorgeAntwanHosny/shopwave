@@ -2,8 +2,6 @@
 
 namespace App\Actions\Checkout;
 
-use App\Events\LowStockAlert;
-use App\Events\NewOrderReceived;
 use App\Models\CheckoutSession;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -99,13 +97,11 @@ class ProcessSuccessfulCheckoutAction
 
         $this->cartService->clear("cart:user:{$checkoutSession->user_id}");
 
-        // Fired only after the transaction has committed — an event for an
-        // order that ultimately rolled back would be worse than none at all.
         foreach ($orders as $order) {
-            event(new NewOrderReceived($order));
+            $order->vendor->notify(new \App\Notifications\NewOrderReceivedNotification($order));
         }
         foreach ($lowStockProducts as $product) {
-            event(new LowStockAlert($product));
+            $product->vendor->notify(new \App\Notifications\LowStockAlertNotification($product));
         }
 
         return $orders;

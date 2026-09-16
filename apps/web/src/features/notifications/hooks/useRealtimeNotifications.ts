@@ -1,16 +1,35 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { getEcho } from "@/lib/echo";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useMe } from "@/features/auth/hooks/useMe";
-import { useNotificationStore } from "@/features/notifications/store/useNotificationStore";
+import { useNotifications, type NotificationDTO } from "@/features/notifications/hooks/useNotifications";
+import { useNotificationStore, type NotificationItem } from "@/features/notifications/store/useNotificationStore";
+import { showNotificationToast } from "@/features/notifications/components/notification-toast";
 
 export function useRealtimeNotifications() {
   const token = useAuthStore((s) => s.token);
   const { data: me } = useMe();
+  const { data: history } = useNotifications();
+  const setInitial = useNotificationStore((s) => s.setInitial);
   const addNotification = useNotificationStore((s) => s.addNotification);
+
+  // Seed the bell with persisted history the moment it loads — anything
+  // that fired while this tab was closed is still here, not just live ones.
+  useEffect(() => {
+    if (!history) return;
+    setInitial(
+      history.map((n) => ({
+        id: n.id,
+        type: n.type,
+        message: n.message,
+        href: n.href,
+        createdAt: n.created_at,
+        read: n.read,
+      }))
+    );
+  }, [history, setInitial]);
 
   useEffect(() => {
     if (!token || !me) return;
@@ -18,60 +37,39 @@ export function useRealtimeNotifications() {
     const echo = getEcho(token);
     if (!echo) return;
 
-    // Store channel references
-  const testChannel = echo.channel("test");
-  testChannel.listen(".TestEvent", (e: any) => {
-    console.log("✅ PUBLIC CHANNEL RECEIVED:", e);
-  });
-
-    const userChannelName = `user.${me.user.id}`;
-    const userChannel = echo.private(userChannelName);
-   console.log("Listening to user channel:", userChannelName);
-
-    userChannel.listen(".OrderStatusChanged", (e: { order_id: number; fulfillment_status: string }) => {
-      const message = `Your order #${e.order_id} is now ${e.fulfillment_status}.`;
-      console.log("OrderStatusChanged event received:", e);
-      addNotification({ type: "OrderStatusChanged", message, href: `/orders/${e.order_id}` });
-      toast.info(message);
-    });
-
-    const vendorId = me.user.vendor?.id;
-    let vendorChannelName: string | null = null;
-
-    if (vendorId) {
-      vendorChannelName = `vendor.${vendorId}`;
-      const vendorChannel = echo.private(vendorChannelName);
-
-      vendorChannel.listen(
-        ".NewOrderReceived",
-        (e: { order_id: number; customer_name: string; total: string }) => {
-          const message = `New order #${e.order_id} from ${e.customer_name} — $${e.total}`;
-          console.log("NewOrderReceived event received:", e);
-          addNotification({ type: "NewOrderReceived", message, href: `/vendor/orders/${e.order_id}` });
-          toast.success(message);
-        }
-      );
-
-      vendorChannel.listen(
-        ".LowStockAlert",
-        (e: { product_id: number; product_name: string; stock_quantity: number }) => {
-          const message = `${e.product_name} is low on stock (${e.stock_quantity} left).`;
-          console.log("LowStockAlert event received:", e);
-          addNotification({ type: "LowStockAlert", message, href: `/vendor/products/${e.product_id}/edit` });
-          toast.warning(message);
-        }
-      );
-
-      vendorChannel.listen(
-        ".NewReviewPosted",
-        (e: { review_id: number; product_name: string; rating: number }) => {
-          const message = `New ${e.rating}★ review on ${e.product_name}.`;
-          console.log("NewReviewPosted event received:", e);
-          addNotification({ type: "NewReviewPosted", message, href: "/vendor/products" });
-          toast.info(message);
-        }
-      );
+    function handle(e: NotificationDTO) {
+      console.log("new notification:", e);
+      const item: NotificationItem = {
+        id: e.id,
+        type: e.type,
+        message: e.message,
+        href: e.href,
+        createdAt: new Date().toISOString(),
+        read: false,
+      };
+      addNotification(item);
+      showNotificationToast(item);
     }
+   // 1. Public Test Channel
+  const testChannel = echo.channel("test");
+  testChannel.listen(".TestEvent", handle);
+
+  // 2. Private User Channel (using .notification())
+  const userChannelName = `user.${me.user.id}`;
+  const userChannel = echo.private(userChannelName);
+
+  // .notification() automatically unwraps Laravel Notification payloads!
+  userChannel.notification(handle);
+
+  // 3. Private Vendor Channel (if vendor exists)
+  const vendorId = me.user.vendor?.id;
+  let vendorChannelName: string | null = null;
+
+  if (vendorId) {
+    vendorChannelName = `vendor.${vendorId}`;
+    const vendorChannel = echo.private(vendorChannelName);
+    vendorChannel.notification(handle);
+  }
 
     return () => {
       echo.leave(userChannelName);

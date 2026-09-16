@@ -2,9 +2,9 @@
 
 namespace App\Actions\Review;
 
-use App\Events\NewReviewPosted;
 use App\Models\OrderItem;
 use App\Models\Review;
+use App\Notifications\NewReviewPostedNotification;
 
 class CreateReviewAction
 {
@@ -19,7 +19,7 @@ class CreateReviewAction
             'comment' => $data['comment'] ?? null,
         ]);
 
-        event(new NewReviewPosted($review));
+        $review->vendor->notify(new NewReviewPostedNotification($review));
 
         return $review;
     }

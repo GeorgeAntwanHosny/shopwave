@@ -1,40 +1,39 @@
 import { create } from "zustand";
 
-export type NotificationType =
-  | "NewOrderReceived"
-  | "LowStockAlert"
-  | "NewReviewPosted"
-  | "OrderStatusChanged";
-
 export interface NotificationItem {
   id: string;
-  type: NotificationType;
+  type: string;
   message: string;
-  href?: string;
+  href: string | null;
   createdAt: string;
   read: boolean;
 }
 
 interface NotificationState {
   notifications: NotificationItem[];
-  addNotification: (item: Omit<NotificationItem, "id" | "read" | "createdAt">) => void;
+  hydrated: boolean;
+  setInitial: (items: NotificationItem[]) => void;
+  addNotification: (item: NotificationItem) => void;
   markAllRead: () => void;
   clear: () => void;
 }
 
-// Deliberately NOT persisted (no zustand `persist` middleware) — this is a
-// live event feed for the current session, not a notification history.
-// Cleared entirely on logout, same as the cart's guest token.
+// Deliberately NOT persisted client-side (no zustand `persist`) — the
+// database is now the source of truth (see NotificationController), this
+// store just mirrors it for the current tab and appends live arrivals.
 export const useNotificationStore = create<NotificationState>()((set) => ({
   notifications: [],
+  hydrated: false,
+  setInitial: (items) => set({ notifications: items, hydrated: true }),
   addNotification: (item) =>
-    set((state) => ({
-      notifications: [
-        { ...item, id: crypto.randomUUID(), read: false, createdAt: new Date().toISOString() },
-        ...state.notifications,
-      ].slice(0, 50), // cap so an idle-but-open tab can't grow this forever
-    })),
+    set((state) => {
+      // De-duped by the real database ID (now included in the live
+      // broadcast payload) — prevents a double entry if the history fetch
+      // and a live event for the same notification land close together.
+      if (state.notifications.some((n) => n.id === item.id)) return state;
+      return { notifications: [item, ...state.notifications].slice(0, 50) };
+    }),
   markAllRead: () =>
     set((state) => ({ notifications: state.notifications.map((n) => ({ ...n, read: true })) })),
-  clear: () => set({ notifications: [] }),
+  clear: () => set({ notifications: [], hydrated: false }),
 }));

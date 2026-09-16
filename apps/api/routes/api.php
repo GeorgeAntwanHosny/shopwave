@@ -13,6 +13,7 @@ use App\Http\Controllers\VendorProductImageController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\VendorCouponController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewReplyController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\VendorDashboardController;
 
 use App\Events\TestBroadcastEvent;
 
+// TEMPORARY — reports the exact broadcasting config in use and any
+// exception raised while publishing. Delete once resolved.
 Route::get('/v1/debug/broadcast-test', function () {
     try {
         broadcast(new TestBroadcastEvent());
@@ -44,6 +47,7 @@ Route::get('/v1/debug/broadcast-test', function () {
         ], 500);
     }
 });
+
 Route::get('/v1/ping', PingController::class);
 
 Route::prefix('v1/auth')->group(function () {
@@ -124,6 +128,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/checkout/{paymentIntentId}/status', [CheckoutController::class, 'status']);
     Route::get('/v1/orders', [OrderController::class, 'index']);
     Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
+    Route::get('/v1/notifications', [NotificationController::class, 'index']);
+    Route::post('/v1/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
 });
 
 Route::post('/v1/webhooks/stripe-payments', [StripePaymentWebhookController::class, 'handle']);

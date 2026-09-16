@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
 class Vendor extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'user_id',
@@ -35,12 +36,19 @@ class Vendor extends Model
     {
         return $this->hasMany(Product::class);
     }
+
     public function coupons(): HasMany
     {
         return $this->hasMany(Coupon::class);
     }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'vendor.'.$this->id;
     }
 }

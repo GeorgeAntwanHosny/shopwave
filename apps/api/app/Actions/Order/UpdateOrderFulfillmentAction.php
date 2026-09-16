@@ -2,8 +2,8 @@
 
 namespace App\Actions\Order;
 
-use App\Events\OrderStatusChanged;
 use App\Models\Order;
+use App\Notifications\OrderStatusChangedNotification;
 
 class UpdateOrderFulfillmentAction
 {
@@ -15,7 +15,7 @@ class UpdateOrderFulfillmentAction
         $order->refresh();
 
         if (isset($data['fulfillment_status']) && $order->fulfillment_status !== $previousStatus) {
-            event(new OrderStatusChanged($order));
+            $order->user->notify(new OrderStatusChangedNotification($order));
         }
 
         return $order;
