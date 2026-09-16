@@ -2,6 +2,8 @@
 
 namespace App\Actions\Checkout;
 
+use App\Events\LowStockAlert;
+use App\Events\NewOrderReceived;
 use App\Models\CheckoutSession;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -17,25 +19,21 @@ class ProcessSuccessfulCheckoutAction
     }
 
     /**
-     * Converts a checkout session's cart snapshot into real per-vendor
-     * orders — this is the "webhook-driven order creation" README
-     * describes. Also decrements stock and increments coupon used_count
-     * here, not at "apply to cart" time (Phase 4's deferred item).
-     *
      * @return Collection<int, Order>
      */
     public function execute(CheckoutSession $checkoutSession): Collection
     {
-        // Idempotency: Stripe can redeliver the same webhook more than once.
         if ($checkoutSession->status === 'completed') {
             return $checkoutSession->orders;
         }
 
         $snapshot = $checkoutSession->cart_snapshot;
         $orders = collect();
+        $lowStockProducts = collect();
 
-        DB::transaction(function () use ($checkoutSession, $snapshot, &$orders) {
+        DB::transaction(function () use ($checkoutSession, $snapshot, &$orders, &$lowStockProducts) {
             $commissionPercent = (string) config('services.platform_commission_percent', 10);
+            $lowStockThreshold = (int) config('shopwave.low_stock_threshold');
 
             foreach ($snapshot['vendors'] as $group) {
                 $subtotal = $group['subtotal'];
@@ -68,11 +66,25 @@ class ProcessSuccessfulCheckoutAction
                         'subtotal' => $item['subtotal'],
                     ]);
 
-                    // Guarded decrement — never goes negative even if stock
-                    // changed between checkout creation and webhook delivery.
-                    Product::where('id', $item['product_id'])
-                        ->where('stock_quantity', '>=', $item['quantity'])
-                        ->decrement('stock_quantity', $item['quantity']);
+                    $product = Product::find($item['product_id']);
+
+                    if ($product) {
+                        $previousStock = $product->stock_quantity;
+
+                        $decremented = Product::where('id', $item['product_id'])
+                            ->where('stock_quantity', '>=', $item['quantity'])
+                            ->decrement('stock_quantity', $item['quantity']);
+
+                        // Only alert on the moment stock CROSSES the
+                        // threshold — not on every subsequent purchase while
+                        // already low, which would spam identical alerts.
+                        if ($decremented > 0) {
+                            $newStock = $previousStock - $item['quantity'];
+                            if ($previousStock > $lowStockThreshold && $newStock <= $lowStockThreshold) {
+                                $lowStockProducts->push($product->fresh());
+                            }
+                        }
+                    }
                 }
 
                 if (! empty($group['coupon']['id'])) {
@@ -85,10 +97,16 @@ class ProcessSuccessfulCheckoutAction
             $checkoutSession->update(['status' => 'completed']);
         });
 
-        // Authenticated-only checkout means the cart key is always
-        // deterministic — no need for the full resolveCartKey() machinery
-        // (which also handles guest tokens) just to clear it here.
         $this->cartService->clear("cart:user:{$checkoutSession->user_id}");
+
+        // Fired only after the transaction has committed — an event for an
+        // order that ultimately rolled back would be worse than none at all.
+        foreach ($orders as $order) {
+            event(new NewOrderReceived($order));
+        }
+        foreach ($lowStockProducts as $product) {
+            event(new LowStockAlert($product));
+        }
 
         return $orders;
     }

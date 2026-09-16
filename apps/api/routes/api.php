@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\OrderStatusChanged;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PingController;
 use App\Http\Controllers\VendorController;
@@ -19,6 +20,30 @@ use App\Http\Controllers\StripePaymentWebhookController;
 use App\Http\Controllers\VendorOrderController;
 use App\Http\Controllers\VendorDashboardController;
 
+use App\Events\TestBroadcastEvent;
+
+Route::get('/v1/debug/broadcast-test', function () {
+    try {
+        broadcast(new TestBroadcastEvent());
+
+        return response()->json([
+            'fired' => true,
+            'broadcast_driver' => config('broadcasting.default'),
+            'reverb_connection_key' => config('broadcasting.connections.reverb.key'),
+            'reverb_connection_host' => config('broadcasting.connections.reverb.options.host'),
+            'reverb_connection_port' => config('broadcasting.connections.reverb.options.port'),
+            'reverb_connection_scheme' => config('broadcasting.connections.reverb.options.scheme'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'fired' => false,
+            'error' => $e->getMessage(),
+            'exception_class' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+});
 Route::get('/v1/ping', PingController::class);
 
 Route::prefix('v1/auth')->group(function () {

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartButton } from "@/features/cart/components/cart-button";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
@@ -68,6 +69,7 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-2">
+          {isLoggedIn && <NotificationBell />}
           <CartButton />
           <ThemeToggle />
 
@@ -89,13 +91,11 @@ export function SiteHeader() {
           </div>
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger
-              render={
-                <Button variant="outline" size="icon" className="sm:hidden" aria-label="Open menu">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              }
-            />
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="sm:hidden" aria-label="Open menu">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
             <SheetContent side="right" className="w-64">
               <SheetHeader>
                 <SheetTitle>Menu</SheetTitle>

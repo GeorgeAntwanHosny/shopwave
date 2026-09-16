@@ -1,6 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*'],
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    'paths' => ['api/*', 'broadcasting/*', 'sanctum/csrf-cookie'],
+    'allowed_headers' => ['*'],
+    'supports_credentials' => true,
 ];
