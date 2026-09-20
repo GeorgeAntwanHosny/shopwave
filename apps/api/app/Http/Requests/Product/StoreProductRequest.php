@@ -6,13 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductRequest extends FormRequest
 {
-    /**
-     * Selling is gated on Stripe onboarding being complete, per README's
-     * "stripe_onboarding_complete gates selling" rule.
-     */
     public function authorize(): bool
     {
-        return (bool) $this->user()?->vendor?->stripe_onboarding_complete;
+        $vendor = $this->user()?->vendor;
+
+        return $vendor && $vendor->stripe_onboarding_complete && ! $vendor->is_suspended;
     }
 
     public function rules(): array

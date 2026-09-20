@@ -20,7 +20,10 @@ use App\Http\Controllers\ReviewReplyController;
 use App\Http\Controllers\StripePaymentWebhookController;
 use App\Http\Controllers\VendorOrderController;
 use App\Http\Controllers\VendorDashboardController;
-
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminProductController;
+use App\Http\Controllers\AdminVendorController;
 use App\Events\TestBroadcastEvent;
 
 // TEMPORARY — reports the exact broadcasting config in use and any
@@ -130,6 +133,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
     Route::get('/v1/notifications', [NotificationController::class, 'index']);
     Route::post('/v1/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats']);
+
+    Route::get('/vendors', [AdminVendorController::class, 'index']);
+    Route::post('/vendors/{vendor}/suspend', [AdminVendorController::class, 'suspend']);
+    Route::post('/vendors/{vendor}/reactivate', [AdminVendorController::class, 'reactivate']);
+
+    Route::get('/products', [AdminProductController::class, 'index']);
+    Route::post('/products/{product}/flag', [AdminProductController::class, 'flag']);
+    Route::post('/products/{product}/unflag', [AdminProductController::class, 'unflag']);
+    Route::post('/products/{product}/deactivate', [AdminProductController::class, 'deactivate']);
+
+    Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::post('/orders/{order}/refund', [AdminOrderController::class, 'refund']);
+    Route::post('/orders/{order}/release-funds', [AdminOrderController::class, 'releaseFunds']);
 });
 
 Route::post('/v1/webhooks/stripe-payments', [StripePaymentWebhookController::class, 'handle']);

@@ -41,7 +41,15 @@ class AuthController extends Controller
     {
         $user = $request->user()->load('vendor');
 
-        return ApiResponse::success(['user' => $user], 'Profile retrieved successfully.');
+        return ApiResponse::success([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'vendor' => $user->vendor,
+                'is_admin' => $user->hasRole('admin'),
+            ],
+        ], 'Profile retrieved successfully.');
     }
 
     protected function mergeGuestCartIfPresent(Request $request, User $user, CartService $cartService): void

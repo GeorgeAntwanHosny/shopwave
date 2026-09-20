@@ -13,13 +13,14 @@ class Product extends Model
 
     protected $fillable = [
         'vendor_id', 'category_id', 'name', 'slug', 'description',
-        'price', 'stock_quantity', 'is_active',
+        'price', 'stock_quantity', 'is_active', 'is_flagged', 'flag_reason',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
         'average_rating' => 'decimal:2',
+        'is_flagged' => 'boolean',
     ];
 
     public function vendor(): BelongsTo

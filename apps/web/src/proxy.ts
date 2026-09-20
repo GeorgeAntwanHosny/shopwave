@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_PATHS = ["/dashboard","/become-a-vendor", "/vendor", "/checkout", "/orders"];
+const PROTECTED_PATHS = ["/dashboard","/become-a-vendor", "/vendor", "/checkout", "/orders", "/admin"];
 const AUTH_PATHS = ["/login", "/register"];
 
 export function proxy(request: NextRequest) {
@@ -23,5 +23,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/become-a-vendor/:path*", "/vendor/:path*", "/checkout/:path*", "/orders/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/become-a-vendor/:path*", "/vendor/:path*", "/checkout/:path*", "/orders/:path*", "/admin/:path*", "/login", "/register"],
 };

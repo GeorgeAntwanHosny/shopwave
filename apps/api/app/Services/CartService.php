@@ -56,11 +56,13 @@ class CartService
             throw ValidationException::withMessages(['product_id' => ['This product is not available.']]);
         }
 
+        if ($product->vendor->is_suspended) {
+            throw ValidationException::withMessages(['product_id' => ['This item is currently unavailable.']]);
+        }
+
         $newQuantity = Redis::hincrby($cartKey, (string) $productId, $quantity);
 
         if ($newQuantity > $product->stock_quantity) {
-            // Roll back rather than leave an over-committed quantity sitting
-            // in the cart.
             Redis::hincrby($cartKey, (string) $productId, -$quantity);
             throw ValidationException::withMessages([
                 'quantity' => ["Only {$product->stock_quantity} left in stock."],

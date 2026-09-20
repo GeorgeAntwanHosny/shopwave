@@ -13,18 +13,16 @@ class Vendor extends Model
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'user_id',
-        'shop_name',
-        'shop_slug',
-        'stripe_account_id',
-        'stripe_onboarding_complete',
-        'average_rating',
-        'rating_count',
+        'user_id', 'shop_name', 'shop_slug', 'stripe_account_id',
+        'stripe_onboarding_complete', 'average_rating', 'rating_count',
+        'is_suspended', 'suspended_at', 'suspension_reason',
     ];
 
     protected $casts = [
         'stripe_onboarding_complete' => 'boolean',
         'average_rating' => 'decimal:2',
+        'is_suspended' => 'boolean',
+        'suspended_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

@@ -39,6 +39,7 @@ export function SiteHeader() {
           ]
         : [{ href: "/orders", label: "Orders" }]
       : []),
+    ...(data?.user.is_admin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
   function handleLogout() {

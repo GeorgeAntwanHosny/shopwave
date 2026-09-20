@@ -15,6 +15,7 @@ interface MeResponse {
     name: string;
     email: string;
     vendor: VendorSummary | null;
+    is_admin: boolean;
   };
 }
 

@@ -74,4 +74,34 @@ class StripePaymentService
             config('services.stripe.payment_webhook_secret')
         );
     }
+
+    /**
+     * Refunds the customer for their share of a multi-vendor charge —
+     * amountCents can be less than the full PaymentIntent, since one
+     * checkout's PaymentIntent may cover several vendor-orders.
+     */
+    public function createRefund(string $paymentIntentId, int $amountCents, ?string $reason = null): \Stripe\Refund
+    {
+        return $this->client->refunds->create([
+            'payment_intent' => $paymentIntentId,
+            'amount' => $amountCents,
+            'metadata' => $reason ? ['reason' => $reason] : [],
+        ]);
+    }
+
+    /**
+     * Claws back a vendor's payout — required before/alongside refunding
+     * the customer if the Transfer already went out, since Stripe's
+     * "Separate Charges and Transfers" pattern does NOT automatically
+     * reverse a completed Transfer just because the original charge was
+     * refunded. Based on current Stripe API docs — not executed against a
+     * live account in this environment, so confirm against a real test-mode
+     * dispute before relying on it in anger.
+     */
+    public function reverseTransfer(string $transferId, int $amountCents): \Stripe\TransferReversal
+    {
+        return $this->client->transfers->createReversal($transferId, [
+            'amount' => $amountCents,
+        ]);
+    }
 }

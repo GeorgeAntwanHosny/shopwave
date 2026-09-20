@@ -16,6 +16,7 @@ class Order extends Model
         'subtotal', 'discount_amount', 'platform_fee_amount', 'vendor_payout_amount',
         'total', 'status', 'fulfillment_status', 'tracking_number', 'carrier',
         'stripe_payment_intent_id', 'stripe_transfer_id', 'transferred_at',
+        'stripe_refund_id', 'refunded_at', 'refund_reason',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Order extends Model
         'vendor_payout_amount' => 'decimal:2',
         'total' => 'decimal:2',
         'transferred_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

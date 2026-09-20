@@ -56,7 +56,9 @@ class ListProductsAction
         if (isset($filters['is_active']) && $filters['is_active'] !== '') {
             $query->where('is_active', (bool) $filters['is_active']);
         }
-
+        if (isset($filters['flagged']) && $filters['flagged'] !== '') {
+            $query->where('is_flagged', (bool) $filters['flagged']);
+        }
         match ($filters['sort'] ?? 'newest') {
             'price_asc' => $query->orderBy('price', 'asc'),
             'price_desc' => $query->orderBy('price', 'desc'),

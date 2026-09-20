@@ -24,7 +24,10 @@ class ProductController extends Controller
             'sort' => ['nullable', 'in:newest,price_asc,price_desc,rating'],
         ]);
 
-        $products = $action->execute(Product::query()->where('is_active', true), $filters);
+        $products = $action->execute(
+            Product::query()->where('is_active', true)->whereHas('vendor', fn ($q) => $q->where('is_suspended', false)),
+            $filters
+        );
 
         return ApiResponse::success([
             'products' => $products->items(),
@@ -36,10 +39,11 @@ class ProductController extends Controller
         ], 'Products retrieved.');
     }
 
-        public function featured(): JsonResponse
+    public function featured(): JsonResponse
     {
         $products = Cache::remember('products:featured', now()->addMinutes(15), function () {
             return Product::where('is_active', true)
+                ->whereHas('vendor', fn ($q) => $q->where('is_suspended', false))
                 ->with(['vendor', 'images'])
                 ->latest()
                 ->take(8)
@@ -52,12 +56,11 @@ class ProductController extends Controller
 
     public function show(Product $product): JsonResponse
     {
-        if (! $product->is_active) {
+        if (! $product->is_active || $product->vendor->is_suspended) {
             return ApiResponse::error('Product not found.', null, 404);
         }
 
         $data = Cache::remember("products:detail:{$product->slug}", now()->addMinutes(30), function () use ($product) {
-            // Add ->toArray() here to prevent PHP incomplete class issues
             return $product->load(['vendor', 'category', 'images'])->toArray();
         });
 
