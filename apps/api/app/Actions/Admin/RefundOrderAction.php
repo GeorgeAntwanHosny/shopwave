@@ -21,12 +21,12 @@ class RefundOrderAction
             throw ValidationException::withMessages(['order' => ['This order has already been refunded.']]);
         }
 
-        // If the vendor's payout already went out, claw it back first — a
-        // customer refund does NOT automatically reverse a completed
-        // Transfer under Stripe's "Separate Charges and Transfers" pattern.
+        $transferWasReversed = false;
+
         if ($order->transferred_at && $order->stripe_transfer_id) {
             $payoutCents = (int) round(((float) $order->vendor_payout_amount) * 100);
             $this->stripePaymentService->reverseTransfer($order->stripe_transfer_id, $payoutCents);
+            $transferWasReversed = true;
         }
 
         $amountCents = (int) round(((float) $order->total) * 100);
@@ -47,7 +47,9 @@ class RefundOrderAction
             }
         });
 
-        $order->user->notify(new OrderRefundedNotification($order));
+        $order->refresh();
+        $order->user->notify(new OrderRefundedNotification($order, $transferWasReversed, $reason));
+        $order->vendor->notify(new OrderRefundedNotification($order, $transferWasReversed, $reason));
 
         return $order->fresh();
     }

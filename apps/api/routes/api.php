@@ -137,17 +137,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats']);
+    Route::get('/dashboard/revenue-chart', [AdminDashboardController::class, 'revenueChart']);
+    Route::get('/dashboard/orders-chart', [AdminDashboardController::class, 'ordersChart']);
 
     Route::get('/vendors', [AdminVendorController::class, 'index']);
+    Route::get('/vendors/{vendor}', [AdminVendorController::class, 'show']);
     Route::post('/vendors/{vendor}/suspend', [AdminVendorController::class, 'suspend']);
     Route::post('/vendors/{vendor}/reactivate', [AdminVendorController::class, 'reactivate']);
 
     Route::get('/products', [AdminProductController::class, 'index']);
+    Route::get('/products/{product}', [AdminProductController::class, 'show']);
     Route::post('/products/{product}/flag', [AdminProductController::class, 'flag']);
     Route::post('/products/{product}/unflag', [AdminProductController::class, 'unflag']);
     Route::post('/products/{product}/deactivate', [AdminProductController::class, 'deactivate']);
+    Route::post('/products/{product}/activate', [AdminProductController::class, 'activate']);
 
     Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
     Route::post('/orders/{order}/refund', [AdminOrderController::class, 'refund']);
     Route::post('/orders/{order}/release-funds', [AdminOrderController::class, 'releaseFunds']);
 });

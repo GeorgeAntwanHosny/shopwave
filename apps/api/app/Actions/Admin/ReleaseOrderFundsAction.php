@@ -3,6 +3,7 @@
 namespace App\Actions\Admin;
 
 use App\Models\Order;
+use App\Notifications\FundsReleasedNotification;
 use App\Services\StripePaymentService;
 use Illuminate\Validation\ValidationException;
 
@@ -32,6 +33,7 @@ class ReleaseOrderFundsAction
         );
 
         $order->update(['stripe_transfer_id' => $transfer->id, 'transferred_at' => now()]);
+        $order->fresh()->vendor->notify(new FundsReleasedNotification($order->fresh()));
 
         return $order->fresh();
     }

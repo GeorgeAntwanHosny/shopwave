@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Admin\GetOrderDetailAction;
 use App\Actions\Admin\ReleaseOrderFundsAction;
 use App\Actions\Admin\RefundOrderAction;
 use App\Http\Responses\ApiResponse;
@@ -16,6 +17,7 @@ class AdminOrderController extends Controller
         $filters = $request->validate([
             'status' => ['nullable', 'in:paid,refunded'],
             'transferred' => ['nullable', 'boolean'],
+            'vendor_id' => ['nullable', 'integer', 'exists:vendors,id'],
         ]);
 
         $query = Order::with(['user', 'vendor', 'items']);
@@ -25,6 +27,9 @@ class AdminOrderController extends Controller
         }
         if (isset($filters['transferred']) && $filters['transferred'] !== '') {
             $filters['transferred'] ? $query->whereNotNull('transferred_at') : $query->whereNull('transferred_at');
+        }
+        if (! empty($filters['vendor_id'])) {
+            $query->where('vendor_id', $filters['vendor_id']);
         }
 
         $orders = $query->latest()->paginate(15)->withQueryString();
@@ -37,6 +42,11 @@ class AdminOrderController extends Controller
                 'total' => $orders->total(),
             ],
         ], 'Orders retrieved.');
+    }
+
+    public function show(Order $order, GetOrderDetailAction $action): JsonResponse
+    {
+        return ApiResponse::success($action->execute($order), 'Order retrieved.');
     }
 
     public function refund(Request $request, Order $order, RefundOrderAction $action): JsonResponse

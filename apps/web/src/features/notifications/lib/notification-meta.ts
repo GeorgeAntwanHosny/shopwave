@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, MessageSquare, Package, RotateCcw, ShieldAlert, ShieldCheck, Star, Truck, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Bell, DollarSign, MessageSquare, Package, PackageCheck, PackageX, RotateCcw, ShieldAlert, ShieldCheck, Star, Truck, type LucideIcon } from "lucide-react";
 
 interface NotificationMeta {
   title: string;
@@ -15,6 +15,9 @@ const META: Record<string, NotificationMeta> = {
   VendorSuspended: { title: "Account suspended", icon: ShieldAlert, colorClass: "bg-red-500/10 text-red-600 dark:text-red-400" },
   VendorReactivated: { title: "Account reactivated", icon: ShieldCheck, colorClass: "bg-green-500/10 text-green-600 dark:text-green-400" },
   OrderRefunded: { title: "Order refunded", icon: RotateCcw, colorClass: "bg-orange-500/10 text-orange-600 dark:text-orange-400" },
+  ProductDeactivated: { title: "Product deactivated", icon: PackageX, colorClass: "bg-red-500/10 text-red-600 dark:text-red-400" },
+  ProductReactivated: { title: "Product reactivated", icon: PackageCheck, colorClass: "bg-green-500/10 text-green-600 dark:text-green-400" },
+  FundsReleased: { title: "Funds released", icon: DollarSign, colorClass: "bg-green-500/10 text-green-600 dark:text-green-400" },
 };
 
 export function getNotificationMeta(type: string): NotificationMeta {

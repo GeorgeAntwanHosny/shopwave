@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Admin\GetVendorDetailAction;
 use App\Actions\Admin\ReactivateVendorAction;
 use App\Actions\Admin\SuspendVendorAction;
 use App\Http\Responses\ApiResponse;
@@ -23,6 +24,11 @@ class AdminVendorController extends Controller
                 'total' => $vendors->total(),
             ],
         ], 'Vendors retrieved.');
+    }
+
+    public function show(Vendor $vendor, GetVendorDetailAction $action): JsonResponse
+    {
+        return ApiResponse::success($action->execute($vendor), 'Vendor retrieved.');
     }
 
     public function suspend(Request $request, Vendor $vendor, SuspendVendorAction $action): JsonResponse
