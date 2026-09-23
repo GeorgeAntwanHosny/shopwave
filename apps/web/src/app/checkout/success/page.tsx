@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCheckoutStatus } from "@/features/checkout/hooks/useCheckoutStatus";
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const paymentIntentId = searchParams.get("payment_intent");
   const { data, isLoading } = useCheckoutStatus(paymentIntentId);
@@ -16,9 +16,6 @@ export default function CheckoutSuccessPage() {
 
   useEffect(() => {
     if (data?.status === "completed") {
-      // Belt-and-suspenders: checkout-form.tsx already invalidates this the
-      // moment Stripe confirms client-side. This covers landing here
-      // directly (e.g. a redirect-based payment method) without that.
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     }
   }, [data?.status, queryClient]);
@@ -70,8 +67,25 @@ export default function CheckoutSuccessPage() {
         ))}
       </div>
 
-      <Button render={<Link href="/orders" />} className="w-full">View your orders</Button>
+      <Button render={<Link href="/checkout" />} className="w-full">View your orders</Button>
       <Button render={<Link href="/products" />} variant="outline" className="w-full">Continue shopping</Button>
     </div>
+  );
+}
+
+function CheckoutSuccessFallback() {
+  return (
+    <div className="mx-auto flex max-w-lg flex-col items-center gap-3 p-4 text-center sm:p-6 lg:p-8">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <p className="text-muted-foreground">Loading order details...</p>
+    </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<CheckoutSuccessFallback />}>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }

@@ -1,0 +1,137 @@
+x-db-env: &db-env
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_DATABASE: shopwave
+  DB_USERNAME: shopwave
+  DB_PASSWORD: secret
+
+x-redis-env: &redis-env
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shopwave
+      POSTGRES_USER: shopwave
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shopwave -d shopwave"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - shopwave
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - shopwave
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      <<: [*db-env, *redis-env]
+      RUN_MIGRATIONS: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - api_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - shopwave
+
+  queue:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=3"]
+    env_file:
+      - .env
+    environment:
+      <<: [*db-env, *redis-env]
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - api_storage:/var/www/html/storage
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - shopwave
+
+  reverb:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    env_file:
+      - .env
+    environment:
+      <<: [*db-env, *redis-env]
+      RUN_MIGRATIONS: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - api_storage:/var/www/html/storage
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - shopwave
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_REVERB_APP_KEY: local-reverb-key
+        NEXT_PUBLIC_REVERB_HOST: localhost
+        NEXT_PUBLIC_REVERB_PORT: "8080"
+        NEXT_PUBLIC_REVERB_SCHEME: http
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_51U8l5zIAL496Gox0servnl8Ety0zwBjYrccjRTeesSs2dsJfKbppwDW6f6XckOi1lDrMpmdwFNGLcipA1r0aTQWQ00slOGRKJZ
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - shopwave
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_storage:
+
+networks:
+  shopwave:
+    driver: bridge
