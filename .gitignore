@@ -1,0 +1,53 @@
+# ── Environment & Secrets ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# ── Node.js / Next.js (apps/web) ──────────────────────────────────
+node_modules/
+.next/
+out/
+build/
+dist/
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+
+# ── Laravel / PHP (apps/api) ──────────────────────────────────────
+apps/api/vendor/
+apps/api/bootstrap/cache/*.php
+!apps/api/bootstrap/cache/.gitignore
+apps/api/storage/*.key
+apps/api/storage/app/*
+!apps/api/storage/app/.gitignore
+apps/api/storage/framework/cache/*
+apps/api/storage/framework/sessions/*
+apps/api/storage/framework/views/*
+apps/api/storage/logs/*
+!apps/api/storage/logs/.gitignore
+apps/api/public/storage
+apps/api/database/*.sqlite
+apps/api/database/*.sqlite-journal
+
+# ── Docker & Local Storage ─────────────────────────────────────────
+.docker/
+*.log
+
+# ── IDEs & Operating Systems ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# ── Testing & Coverage ─────────────────────────────────────────────
+coverage/
+.phpunit.result.cache
+.pest/
