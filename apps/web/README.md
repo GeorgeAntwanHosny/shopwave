@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ShopWave Web (Next.js)
 
-## Getting Started
+The frontend for [ShopWave](../../README.md) — consumes the Laravel API in `apps/api` over REST + a Reverb WebSocket, no server-rendered coupling to the backend.
 
-First, run the development server:
+## Stack
 
+Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · TanStack Query · Zustand · react-hook-form + zod · Laravel Echo + Pusher-js · Recharts · dnd-kit · next-themes
+
+## Running
+
+**Docker (recommended)** — from the repo root: `make up` (see [root README](../../README.md#-quick-start-docker)). Serves at http://localhost:3000.
+
+**Native (no Docker)** — requires the API running separately (Docker or native, see [`apps/api/README.md`](../api/README.md)):
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Laravel API base URL |
+| `NEXT_PUBLIC_REVERB_*` | Reverb WebSocket connection (host/port/scheme/app key) — must be the browser-facing host, never a Docker service name |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your own Stripe test-mode publishable key |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## UI/UX Standards
 
-## Learn More
+Applies to every component in this app, no exceptions:
+- **Responsive by default** — mobile-first, checked at mobile/tablet/desktop.
+- **Dark & light mode** — via `next-themes` and shadcn/ui's theme-aware tokens; nothing hardcodes a light-only color.
+- **Skeleton loading states** — every data-fetching view shows a skeleton matching its final layout, never a blank screen or bare spinner.
+- **Toast feedback** — validation/API errors and success confirmations via `sonner`, never raw inline text alone.
+- **Dual-layer validation** — every form validates client-side (`react-hook-form` + `zod`) for instant feedback and is re-validated by the backend Form Request, the real security boundary.
+- **Explicit mutation states** — idle, loading (disabled submit + spinner), error (toast + inline field errors), success (toast + actual UI update).
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 
+```text
+src/
+├── app/ # App Router pages & layouts (root ThemeProvider in layout.tsx)
+│ └── admin/ # Admin panel — role-gated, own sub-navigation
+├── components/ # UI & shadcn components
+├── features/ # Domain logic (cart, checkout, vendor, reviews, notifications, admin)
+├── lib/ # TanStack Query, Zustand, and Echo/Reverb client instances
+├── lib/validations/ # zod schemas, one per form
+└── types/ # TypeScript types, incl. ApiResponse<T>
+```
+See the [root README](../../README.md) for the full architecture and feature list.

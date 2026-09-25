@@ -1,58 +1,76 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ShopWave API (Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The headless backend for [ShopWave](../../README.md) — a strictly REST API with no server-rendered views, consumed by `apps/web`.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Laravel 13 · PHP 8.4 · PostgreSQL 16 · Redis · Laravel Sanctum · spatie/laravel-permission · Laravel Reverb · Stripe Connect · nginx + php-fpm (Docker)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Running
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+**Docker (recommended)** — from the repo root:
 ```bash
-composer require laravel/boost --dev
+make up
+```
+This runs the `api` (nginx + php-fpm), `queue` (worker), and `reverb` (websockets) containers together against the shared `postgres`/`redis` containers. See the [root README](../../README.md#-quick-start-docker) for the full command set and Stripe webhook setup.
 
-php artisan boost:install
+**Native (no Docker)** — requires PostgreSQL 16, Redis, and PHP 8.4 with the `bcmath`, `pdo_pgsql`, and `redis` extensions installed locally:
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan admin:promote you@example.com   # grants yourself admin access
+php artisan reverb:start --debug            # separate terminal
+php artisan serve                            # http://localhost:8000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Testing
 
-## Contributing
+```bash
+php artisan test --testsuite=Feature
+```
+One PHPUnit feature test per endpoint (happy path + at least one failure case) — this is a hard requirement before any endpoint is considered done. Cart/coupon/checkout/dashboard/admin suites need a real local Redis.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## API Contract
 
-## Code of Conduct
+Every controller response follows one envelope via `app/Http/Responses/ApiResponse.php`:
+```json
+{ "success": true, "message": "...", "data": {}, "errors": null }
+```
+Form Requests' `failedValidation()` is overridden globally to emit this shape automatically. Full request/response examples live in `postman/ShopWave.postman_collection.json`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Structure
 
-## Security Vulnerabilities
+```text
+app/
+├── Actions/     # Single-responsibility business logic (incl. Actions/Admin/*)
+├── Console/Commands/   # admin:promote and other ops tooling
+├── Http/Controllers/   # Slim REST controllers
+├── Http/Requests/ # Form Requests — the actual backend validation boundary
+├── Http/Responses/ # ApiResponse — unified envelope
+├── Models/ # Eloquent models & observers
+├── Notifications/ # Database + broadcast notification classes
+├── Policies/ # Ownership & authorization boundaries
+└── Services/ # Stripe & Redis service adapters
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Stripe Webhooks (local)
 
-## License
+Two separate listeners — Connect (thin events) and payments (classic) are different event streams:
+```bash
+stripe listen --thin-events 'v2.core.account[requirements].updated' \
+  --forward-thin-to http://localhost:8000/api/v1/webhooks/stripe
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+stripe listen --forward-to http://localhost:8000/api/v1/webhooks/stripe-payments
+```
+Put the signing secrets each command prints into `STRIPE_WEBHOOK_SECRET` / `STRIPE_PAYMENT_WEBHOOK_SECRET`.
+
+## Worth knowing
+
+- `config('auth.defaults.guard')` must be `sanctum`, not Laravel's default `web` — this API authenticates purely via Sanctum, and `spatie/laravel-permission`'s role checks are guard-aware.
+- The php-fpm pool sets `clear_env = no` explicitly — the default `clear_env = yes` silently strips DB/Redis/Stripe env vars from every fpm worker in Docker.
+- All money math written to the database uses `bcmath`, never native float arithmetic.
+- Route changes: run `php artisan route:list --path=vendor` and `--path=admin` to confirm middleware applies to every row.
+
+See the [root README](../../README.md) for the full architecture and feature list.
